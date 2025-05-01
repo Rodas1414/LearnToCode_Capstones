@@ -1,10 +1,9 @@
 package AccountingLedger;
 
 import java.util.*;
-import java.text.*;
 
 public class FinancialTrackerApp {
-    private static final String FILENAME = "transactions.csv";
+    private static final String FILENAME = "AccountingLedger/transactions.csv";
     private static List<Transaction> transactions = new ArrayList<>();
 
     public static void main(String[] args) {
