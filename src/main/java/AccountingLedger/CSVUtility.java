@@ -18,8 +18,13 @@ public class CSVUtility {
                     String time = fields[1];
                     String description = fields[2];
                     String vendor = fields[3];
-                    double amount = Double.parseDouble(fields[4]);
-                    String type = fields[5];
+                    String type = fields[4];  // "P" or "D"
+                    double amount = Double.parseDouble(fields[5]);
+
+                    // If payment, make amount negative
+                    if (type.equalsIgnoreCase("P")) {
+                        amount = -Math.abs(amount);
+                    }
 
                     Transaction transaction = new Transaction(date, time, description, vendor, amount, type);
                     transactions.add(transaction);
@@ -35,21 +40,20 @@ public class CSVUtility {
     // Method to write transactions to a CSV file
     public static void writeTransactions(String filename, List<Transaction> transactions) {
         try {
-            // Ensure the parent directory exists
             File file = new File(filename);
-            file.getParentFile().mkdirs();  // Create parent directories if they don’t exist
+            file.getParentFile().mkdirs();  // Create directories if they don’t exist
 
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
                 for (Transaction transaction : transactions) {
-                    bw.write(transaction.toCSV());  // Ensure Transaction has a toCSV() method
-                    bw.newLine();  // Add a new line after each transaction
+                    bw.write(transaction.toCSV());  // Write transaction as CSV
+                    bw.newLine();
                 }
             }
 
             System.out.println("Transactions successfully written to: " + filename);
         } catch (IOException e) {
             System.out.println("Error writing to the file: " + e.getMessage());
-            e.printStackTrace();  // Print stack trace for debugging purposes
+            e.printStackTrace();
         }
     }
 }

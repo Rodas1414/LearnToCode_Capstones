@@ -1,13 +1,14 @@
 package AccountingLedger;
 
 import java.util.*;
+import static AccountingLedger.CSVUtility.readTransactions;
 
 public class FinancialTrackerApp {
-    private static final String FILENAME = "AccountingLedger/transactions.csv";
+    private static final String FILENAME = "src/transactions.csv";
     private static List<Transaction> transactions = new ArrayList<>();
 
     public static void main(String[] args) {
-        transactions = CSVUtility.readTransactions(FILENAME);
+        transactions = readTransactions(FILENAME);
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
@@ -16,14 +17,15 @@ public class FinancialTrackerApp {
             System.out.println("P) Make Payment (Debit)");
             System.out.println("L) Ledger");
             System.out.println("X) Exit");
-            String choice = scanner.nextLine().toUpperCase();
+            System.out.print("Enter choice: ");
+            String choice = scanner.nextLine().trim().toUpperCase();
 
             switch (choice) {
                 case "D":
-                    addDeposit(scanner);
+                    addTransaction(scanner, "deposit");
                     break;
                 case "P":
-                    makePayment(scanner);
+                    addTransaction(scanner, "payment");
                     break;
                 case "L":
                     ledgerScreen(scanner);
@@ -37,9 +39,8 @@ public class FinancialTrackerApp {
         }
     }
 
-    // Add a Deposit
-    private static void addDeposit(Scanner scanner) {
-        System.out.println("Enter deposit details:");
+    private static void addTransaction(Scanner scanner, String type) {
+        System.out.println("Enter " + type + " details:");
 
         System.out.print("Date (YYYY-MM-DD): ");
         String date = scanner.nextLine();
@@ -53,44 +54,25 @@ public class FinancialTrackerApp {
         System.out.print("Vendor: ");
         String vendor = scanner.nextLine();
 
-        System.out.print("Amount: ");
-        double amount = Double.parseDouble(scanner.nextLine());
+        double amount = 0.0;
+        try {
+            System.out.print("Amount: ");
+            amount = Double.parseDouble(scanner.nextLine());
+            if (type.equals("payment")) {
+                amount = -amount; // Negative for payments
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid amount. Transaction cancelled.");
+            return;
+        }
 
-        Transaction deposit = new Transaction(date, time, description, vendor, amount, "deposit");
-        transactions.add(deposit);
+        Transaction transaction = new Transaction(date, time, description, vendor, amount, type);
+        transactions.add(transaction);
         CSVUtility.writeTransactions(FILENAME, transactions);
 
-        System.out.println("Deposit added successfully.");
+        System.out.println(type.substring(0, 1).toUpperCase() + type.substring(1) + " added successfully.");
     }
 
-    // Make a Payment (Debit)
-    private static void makePayment(Scanner scanner) {
-        System.out.println("Enter payment details:");
-
-        System.out.print("Date (YYYY-MM-DD): ");
-        String date = scanner.nextLine();
-
-        System.out.print("Time (HH:mm:ss): ");
-        String time = scanner.nextLine();
-
-        System.out.print("Description: ");
-        String description = scanner.nextLine();
-
-        System.out.print("Vendor: ");
-        String vendor = scanner.nextLine();
-
-        System.out.print("Amount: ");
-        double amount = Double.parseDouble(scanner.nextLine());
-
-        // Negative amount for payments
-        Transaction payment = new Transaction(date, time, description, vendor, -amount, "payment");
-        transactions.add(payment);
-        CSVUtility.writeTransactions(FILENAME, transactions);
-
-        System.out.println("Payment added successfully.");
-    }
-
-    // Ledger Screen
     private static void ledgerScreen(Scanner scanner) {
         while (true) {
             System.out.println("\nLedger Screen:");
@@ -99,7 +81,8 @@ public class FinancialTrackerApp {
             System.out.println("P) Payments");
             System.out.println("R) Reports");
             System.out.println("H) Home");
-            String choice = scanner.nextLine().toUpperCase();
+            System.out.print("Enter choice: ");
+            String choice = scanner.nextLine().trim().toUpperCase();
 
             switch (choice) {
                 case "A":
@@ -115,31 +98,27 @@ public class FinancialTrackerApp {
                     reportsScreen(scanner);
                     break;
                 case "H":
-                    return; // Go back to Home Screen
+                    return;
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
         }
     }
 
-    // Display Ledger entries
     private static void displayLedger(String filter) {
-        List<Transaction> filteredTransactions = new ArrayList<>();
-        for (Transaction transaction : transactions) {
-            if (filter.equals("all") ||
-                    (filter.equals("deposit") && transaction.getType().equals("deposit")) ||
-                    (filter.equals("payment") && transaction.getType().equals("payment"))) {
-                filteredTransactions.add(transaction);
+        List<Transaction> filtered = new ArrayList<>();
+        for (Transaction t : transactions) {
+            if (filter.equals("all") || t.getType().equals(filter)) {
+                filtered.add(t);
             }
         }
-        Collections.sort(filteredTransactions, Comparator.comparing(Transaction::getDate).reversed());
+        filtered.sort(Comparator.comparing(Transaction::getDate).reversed());
 
-        for (Transaction transaction : filteredTransactions) {
-            System.out.println(transaction);
+        for (Transaction t : filtered) {
+            System.out.println(t);
         }
     }
 
-    // Reports Screen
     private static void reportsScreen(Scanner scanner) {
         while (true) {
             System.out.println("\nReports Screen:");
@@ -149,45 +128,44 @@ public class FinancialTrackerApp {
             System.out.println("4) Previous Year");
             System.out.println("5) Search by Vendor");
             System.out.println("0) Back");
+            System.out.print("Enter choice: ");
             String choice = scanner.nextLine();
 
             switch (choice) {
                 case "1":
-                    // Month to Date report logic here
+                    // Add Month-to-Date logic
                     break;
                 case "2":
-                    // Previous Month report logic here
+                    // Add Previous Month logic
                     break;
                 case "3":
-                    // Year to Date report logic here
+                    // Add Year-to-Date logic
                     break;
                 case "4":
-                    // Previous Year report logic here
+                    // Add Previous Year logic
                     break;
                 case "5":
                     searchByVendor(scanner);
                     break;
                 case "0":
-                    return; // Go back to the Ledger Screen
+                    return;
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
         }
     }
 
-    // Search transactions by vendor
     private static void searchByVendor(Scanner scanner) {
         System.out.print("Enter vendor name: ");
         String vendor = scanner.nextLine();
 
-        for (Transaction transaction : transactions) {
-            if (transaction.getVendor().equalsIgnoreCase(vendor)) {
-                System.out.println(transaction);
+        for (Transaction t : transactions) {
+            if (t.getVendor().equalsIgnoreCase(vendor)) {
+                System.out.println(t);
             }
         }
     }
 
-    // Exit the application
     private static void exitApplication() {
         System.out.println("Exiting the application...");
     }
