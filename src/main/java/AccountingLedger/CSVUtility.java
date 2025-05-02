@@ -12,7 +12,7 @@ public class CSVUtility {
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String line;
             while ((line = br.readLine()) != null) {
-                String[] fields = line.split("\\|");
+                String[] fields = line.split("\\|");  // Split by '|' as per your data format
                 if (fields.length == 6) {
                     String date = fields[0];
                     String time = fields[1];
@@ -34,14 +34,22 @@ public class CSVUtility {
 
     // Method to write transactions to a CSV file
     public static void writeTransactions(String filename, List<Transaction> transactions) {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
-            for (Transaction transaction : transactions) {
-                bw.write(transaction.toCSV());
-                bw.newLine();
+        try {
+            // Ensure the parent directory exists
+            File file = new File(filename);
+            file.getParentFile().mkdirs();  // Create parent directories if they don’t exist
+
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
+                for (Transaction transaction : transactions) {
+                    bw.write(transaction.toCSV());  // Ensure Transaction has a toCSV() method
+                    bw.newLine();  // Add a new line after each transaction
+                }
             }
+
+            System.out.println("Transactions successfully written to: " + filename);
         } catch (IOException e) {
             System.out.println("Error writing to the file: " + e.getMessage());
+            e.printStackTrace();  // Print stack trace for debugging purposes
         }
     }
 }
-

@@ -1,67 +1,123 @@
-<h1 align="center" style="color:#ff69b4;">💸 Accounting Ledger App</h1>
+# 💰 **Financial Tracker Application** 💸
 
-<p align="center">
-  <b>by Rodas Gebreyohannes</b> <br>
-  Java CLI application to manage your money with ✨style✨ and 💼 precision.
-</p>
+Welcome to the **Financial Tracker Application**! 🎉 This app helps you easily manage and track your personal finances, offering the ability to add deposits, make payments, and generate financial reports. 💵
 
----
+## 📸 **Screenshots**
 
-## 🌈 About the Project
+### 🏠 **Home Screen**
+The **Home Screen** is where you can choose your next action: adding a deposit, making a payment, viewing the ledger, or exiting the application.
 
-> 🎯 Track your money like a boss.
+![Home Screen](src/Image/home.png)
 
-This is a **Java Command-Line Interface (CLI)** application designed to:
-- 💰 Add deposits
-- 💸 Record payments
-- 🧾 View a ledger
-- 📊 Generate financial reports (like month-to-date, vendor-specific, etc.)
+### 📊 **Report Screen**
+The **Report Screen** lets you generate various financial reports based on your transactions.
 
-Everything is stored in a `.csv` file — no databases needed! 🗃️
+![Report Screen](src/Image/report.png)
 
----
+### 📑 **Ledger Screen**
+The **Ledger Screen** displays your entire transaction history in an easy-to-read format.
 
-## 🛠 Tech Stack
+![Ledger Screen](src/Image/ledger.png)
 
-| Tool         | Purpose                  |
-|--------------|--------------------------|
-| ☕ Java       | Core programming language |
-| 🧠 IntelliJ   | Code editor / IDE         |
-| 🗂 CSV files  | Data storage              |
-| 🧼 Terminal   | User interface            |
+## 🖥️ **Features**
 
----
+- 💸 **Add Deposit**: Allows you to record income or any incoming funds.
+- 💳 **Make Payment (Debit)**: Record any outgoing transactions such as bills, purchases, or payments.
+- 🧾 **Ledger**: View a full list of all your transactions with detailed information.
+- 📈 **Reports**: Generate financial reports to analyze your spending or income over specific periods.
 
-## ✨ Features
+## 🔍 **Code Structure**
 
-- 🔐 Securely stores all transactions
-- 🔎 Filters by:
-    - ✅ All Transactions
-    - 💵 Deposits
-    - 🧾 Payments
-- 📅 Reports by:
-    - 🕒 Date (month-to-date, previous month)
-    - 🛍️ Vendor
-- 🎯 Search functionality
-- 📜 Sorts transactions by most recent
+The **Financial Tracker Application** is built using Java and follows a simple object-oriented design. Below is an overview of the classes and their responsibilities:
 
----
+### 1. **`FinancialTrackerApp`** (Main Application)
 
-## 🧠 Code Highlight
+The entry point to the application. It runs the main program loop, offering a simple text-based interface for the user to interact with.
 
-Here’s how I filter and display transactions beautifully:
+- **Features**:
+   - Display home screen options.
+   - Allow user to add deposits, make payments, view the ledger, or exit.
+   - Interact with the `CSVUtility` class to read and write transaction data.
 
-```java
-private static void displayLedger(String filter) {
-    List<Transaction> filtered = new ArrayList<>();
-    for (Transaction t : transactions) {
-        if (filter.equals("all") || 
-           (filter.equals("deposit") && t.getType().equals("deposit")) ||
-           (filter.equals("payment") && t.getType().equals("payment"))) {
-            filtered.add(t);
-        }
-    }
+### 2. **`Transaction`** (Represents Financial Transactions)
 
-    Collections.sort(filtered, Comparator.comparing(Transaction::getDate).reversed());
-    filtered.forEach(System.out::println);
-}
+Represents an individual financial transaction (either a deposit or payment). This class holds the transaction’s attributes such as:
+
+- Date
+- Time
+- Description
+- Vendor
+- Amount 💵
+- Type (deposit or payment)
+
+This class also has methods to format the transaction details into a CSV-friendly format.
+
+### 3. **`CSVUtility`** (Handles File I/O)
+
+This utility class provides methods for reading and writing transaction data from/to a CSV file.
+
+- **`readTransactions`**: Reads the transaction records from a specified CSV file and loads them into a list of `Transaction` objects.
+- **`writeTransactions`**: Writes the updated list of `Transaction` objects back into the CSV file, ensuring the records are saved.
+
+### 4. **`Reports`** (Generates Reports)
+
+Responsible for creating financial reports such as:
+
+- **Month-to-date** (MTD) 📅
+- **Previous month** 📅
+- **Year-to-date** (YTD) 📅
+- **Previous year** 📅
+- **Search by vendor** 🏢
+
+This module allows users to generate reports based on transaction data, helping them analyze their finances over specific periods.
+
+## 🔧 **Technologies Used**
+
+- **Java**: The programming language used to build this application.
+- **CSV Files**: Used for storing transaction data.
+- **Scanner & BufferedReader**: For reading user input and reading/writing to CSV files.
+- **Simple CLI Interface**: The application runs in the console for a simple, no-frills user experience.
+
+## 📁 Project File Structure
+
+- **src**
+   - **main**
+      - **java**
+         - **AccountingLedger**
+            - `FinancialTrackerApp.java` – Main application logic
+            - `Transaction.java` – Represents a financial transaction
+            - `CSVUtility.java` – Handles reading/writing transactions to CSV
+   - **Image**
+      - `home.png` – 🏠 Home screen UI
+      - `ledger.png` – 📑 Ledger screen UI
+      - `report.png` – 📊 Report screen UI
+
+- `transactions.csv` – 💾 Stores all transaction records
+- `README.md` – 📚 Project documentation
+
+
+## 💡 **How to Use**
+
+1. **Run the Application**:
+   - Download or clone the project from GitHub.
+   - Compile the `FinancialTrackerApp.java` file using your Java IDE or command line.
+   - Run the application, and you'll be presented with a simple CLI interface.
+
+2. **Add a Deposit**: 💸
+   - Enter details such as the date, description, vendor, and amount.
+
+3. **Make a Payment (Debit)**: 💳
+   - Similar to adding a deposit, but the amount will be recorded as a negative value.
+
+4. **View the Ledger**: 📑
+   - See all your transactions listed with the option to filter by type (deposit or payment).
+
+5. **Generate Reports**: 📊
+   - Generate reports for a specific period (month, year, etc.) or search by vendor.
+
+
+
+
+**Made with ❤️ by [Rodas](https://github.com/Rodas1414)**
+
+
