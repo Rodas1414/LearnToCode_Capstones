@@ -7,17 +7,17 @@ Welcome to the **Financial Tracker Application**! 🎉 This app helps you easily
 ### 🏠 **Home Screen**
 The **Home Screen** is where you can choose your next action: adding a deposit, making a payment, viewing the ledger, or exiting the application.
 
-![Home Screen](src/Image/home.png)
+![Home Screen](src/Image/Home.png)
 
 ### 📊 **Report Screen**
 The **Report Screen** lets you generate various financial reports based on your transactions.
 
-![Report Screen](src/Image/report.png)
+![Report Screen](src/Image/Report.png)
 
 ### 📑 **Ledger Screen**
 The **Ledger Screen** displays your entire transaction history in an easy-to-read format.
 
-![Ledger Screen](src/Image/ledger.png)
+![Ledger Screen](/src/Image/Ledger.png)
 
 ## 🖥️ **Features**
 
