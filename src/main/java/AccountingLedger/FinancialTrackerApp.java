@@ -1,172 +1,400 @@
 package AccountingLedger;
-//Rodas
+import AccountingLedger.Transaction;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
-import static AccountingLedger.CSVUtility.readTransactions;
 
 public class FinancialTrackerApp {
-    private static final String FILENAME = "src/transactions.csv";
-    private static List<Transaction> transactions = new ArrayList<>();
+
+    // Import Scanner in the class using static
+    static Scanner scanner = new Scanner(System.in);
+    static String transactionFileName = "src/transaction.csv"; // Path to the CSV file to save/load transactions
+    static DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm:ss a");
+    static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
 
     public static void main(String[] args) {
-        transactions = readTransactions(FILENAME);
-        Scanner scanner = new Scanner(System.in);
+        homeMenu();
+    }
+    /// //////////////////////////////////////////////////////////////////////////////////////
 
-        while (true) {
-            System.out.println("\nHome Screen:");
-            System.out.println("D) Add Deposit");
-            System.out.println("P) Make Payment (Debit)");
-            System.out.println("L) Ledger");
-            System.out.println("X) Exit");
-            System.out.print("Enter choice: ");
-            String choice = scanner.nextLine().trim().toUpperCase();
+    // Create HOME MENU  method with prompts
+    public static void homeMenu() {
+        // Welcome the user
+        System.out.println("\n      *****  Welcome to your Account Ledger Application *****       \n");
 
-            switch (choice) {
+        // How the application will continue to run until the user decides to exit
+        boolean homeMenuRunning = true;
+
+        /* Create while loop to repeat a block of code until the condition is met */
+        while (homeMenuRunning) {
+            // Ask the user what they'd like to do/ Give prompts
+            System.out.println(""" 
+                    \n------------  What would you like to do today? ------------
+                    (D.) Add Deposit
+                    (P.) Make Payment
+                    (L.) Display Ledger Screen
+                    (X.) Exit""");
+
+            // How the user makes their selection
+            String userInput = scanner.nextLine().trim().toUpperCase();
+
+            // Create switch statement to allow user to choose between options
+            switch (userInput) {
                 case "D":
-                    addTransaction(scanner, "deposit");
+                    // Writing what is in the addDeposit() to the file created
+                    Transaction newDeposit = addDeposit(); // Get deposit transaction
+                    writeToFile(transactionFileName, newDeposit); // Writes the payment to the file
                     break;
                 case "P":
-                    addTransaction(scanner, "payment");
+                    Transaction newPayment = makePayment();
+                    writeToFile(transactionFileName, newPayment);
                     break;
                 case "L":
-                    ledgerScreen(scanner);
+                    ledgerMenu();
                     break;
                 case "X":
-                    exitApplication();
-                    return;
+                    System.out.println("Are you sure you want to exit? (Y/N)");
+                    String userChoice = scanner.nextLine().trim().toUpperCase();
+
+                    if (userChoice.equalsIgnoreCase("Y")) {
+                        System.out.println("Thank you for using your Account Ledger Application ");
+                        homeMenuRunning = false;
+                    }    else {
+                        homeMenuRunning = true;
+                    }
+                    break;
                 default:
-                    System.out.println("Invalid choice. Please try again.");
+                    System.out.println("Invalid entry. Please select from the following options: 'D','P','L','X' ");
+
+
             }
         }
     }
 
-    private static void addTransaction(Scanner scanner, String type) {
-        System.out.println("Enter " + type + " details:");
+    // create deposit transaction from user input
+    public static Transaction addDeposit() {
+        // Create primitives after user input
 
-        System.out.print("Date (YYYY-MM-DD): ");
-        String date = scanner.nextLine();
+        LocalDate ld = LocalDate.now();
+        LocalTime lt = LocalTime.now();
 
-        System.out.print("Time (HH:mm:ss): ");
-        String time = scanner.nextLine();
+        System.out.println("Please provide the amount of deposit");
+        double amount = Double.parseDouble(scanner.nextLine());
 
-        System.out.print("Description: ");
-        String description = scanner.nextLine();
+        System.out.println("Please enter the vendor name: ");
+        String vendor = scanner.nextLine().trim();
 
-        System.out.print("Vendor: ");
-        String vendor = scanner.nextLine();
+        System.out.println("Please provide a description: ");
+        String description = scanner.nextLine().trim();
 
-        double amount = 0.0;
-        try {
-            System.out.print("Amount: ");
-            amount = Double.parseDouble(scanner.nextLine());
-            if (type.equals("payment")) {
-                amount = -amount; // Negative for payments
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid amount. Transaction cancelled.");
-            return;
-        }
+        System.out.println("You deposited " + amount + " to " + vendor + " on " + ld + " at " + lt.format(timeFormatter) );
+        String idOfTransaction = "D";
 
-        Transaction transaction = new Transaction(date, time, description, vendor, amount, type);
-        transactions.add(transaction);
-        CSVUtility.writeTransactions(FILENAME, transactions);
-
-        System.out.println(type.substring(0, 1).toUpperCase() + type.substring(1) + " added successfully.");
+        // Call constructor out
+        // This will take the user input and create a single deposit transaction
+        return new Transaction(ld, lt, description, idOfTransaction, vendor, amount);
     }
 
-    private static void ledgerScreen(Scanner scanner) {
-        while (true) {
-            System.out.println("\nLedger Screen:");
-            System.out.println("A) All");
-            System.out.println("D) Deposits");
-            System.out.println("P) Payments");
-            System.out.println("R) Reports");
-            System.out.println("H) Home");
-            System.out.print("Enter choice: ");
-            String choice = scanner.nextLine().trim().toUpperCase();
+    // Create a file method to write
+    // In () add the String variable, Class and object
+    public static void writeToFile(String fileName, Transaction transaction) {
+        // allows to add more to the file w.o losing what was inputted before
+        try (FileWriter fw = new FileWriter(fileName, true)) { //append so every transaction gets saved
+            fw.write(transaction.toString() + "\n"); // Writes transaction as a string
+        } catch (IOException e) {
+            System.out.println("Something went wrong " + e.getMessage()); // this is incase something goes wrong
+        }
+    }
 
-            switch (choice) {
+    // create a payment transaction
+    public static Transaction makePayment() {
+
+        LocalDate ld = LocalDate.now();
+        LocalTime lt = LocalTime.now();
+
+        System.out.println("Please enter the payment amount: ");
+        double amount = (Double.parseDouble(scanner.nextLine())) * -1; //-1 to negate the amount of the payment.
+
+        System.out.println("Please enter the vendor name: ");
+        String vendor = scanner.nextLine().trim();
+
+        System.out.println("Please provide a description: ");
+        String description = scanner.nextLine().trim();
+
+        System.out.println("You made a payment of $" + String.format("%.2f", amount) + " to " + vendor + " on " + ld);
+        String idOfTransaction = "P";
+
+        return new Transaction(ld, lt, description, idOfTransaction, vendor, amount);
+
+    }
+
+    //  Create LEDGER MENU with methods
+    public static void ledgerMenu() {
+        // Welcome the user
+        System.out.println("\n                     *****  Ledger Menu *****      \n");
+
+        // How the ledger screen will continue to run until the user decides to exit
+        boolean ledgerMenuRunning = true;
+
+        /* Create while loop to repeat a block of code until the condition is met */
+        while (ledgerMenuRunning) {
+            // Ask the user which option they'd like to pick
+            // D 'Deposits' show all deposits
+            // 'P' Payments will show all payments
+
+            System.out.println(""" 
+                     \n ------------  Please select from the following options:  ------------
+                    (A.) Display all transactions
+                    (D.) Deposit transactions
+                    (P.) Payment transactions
+                    (R.) Reports Menu
+                    (H.) Home
+                    """);
+
+            // How the user makes their selection
+            String userInputLedger = scanner.nextLine().trim().toUpperCase();
+
+            // Create switch statement to allow user to make a choice
+            switch (userInputLedger) {
                 case "A":
-                    displayLedger("all");
+                    List<Transaction> allTransactions = getTransactionsFromFile(transactionFileName);
+                    sortingDateTime(allTransactions);
                     break;
                 case "D":
-                    displayLedger("deposit");
+                    List<Transaction> depositTransactions = searchTransactionById("D", "Deposits");
+                    sortingDateTime(depositTransactions);
                     break;
                 case "P":
-                    displayLedger("payment");
+                    List<Transaction> paymentTransactions = searchTransactionById("P", "Payments");
+                    sortingDateTime(paymentTransactions);
                     break;
                 case "R":
-                    reportsScreen(scanner);
+                    reportMenu();
                     break;
                 case "H":
-                    return;
+                    ledgerMenuRunning = false;
+                    System.out.println("Returning to Home page ... ");
+                    break;
                 default:
-                    System.out.println("Invalid choice. Please try again.");
+                    System.out.println("Invalid entry. Please select from the following options: 'D','P','R','H' ");
+
+            }
+
+        }
+
+    }
+
+    public static List<Transaction> getTransactionsFromFile(String fileName) {
+        // Create a list to store all transactions from user entries
+        // Get all transaction from the CSV file and return as a list
+        List<Transaction> transactions = new ArrayList<>();
+
+        // Create a BufferedReader for transactions
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] arrayTransactions = line.split("\\|");
+
+                Transaction transaction = new Transaction(LocalDate.parse(arrayTransactions[0], dateFormatter), LocalTime.parse(arrayTransactions[1], timeFormatter), arrayTransactions[2], arrayTransactions[3], arrayTransactions[4], Double.parseDouble(arrayTransactions[5]));
+
+                // Start adding into transactions list
+                transactions.add(transaction);
+            }
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+        return transactions;
+    }
+
+    // Displaying a list formatter
+    public static void displayTransaction(List<Transaction> transactions) {
+        for (Transaction transaction : transactions) {
+            // printing the list in a certain format %s for strings,%.2f%$%n for two numbers after '.'
+            System.out.printf("%s | %s | %s | %s | %s | %.2f%n", transaction.getDate().format(dateFormatter), transaction.getTime().format(timeFormatter), transaction.getDescription(), transaction.getIdOfTransaction(), transaction.getVendor(), transaction.getAmount());
+
+        }
+    }
+
+    // Showing all deposits
+    public static List<Transaction> searchTransactionById(String id, String transactionTypeName) {
+        System.out.println(" \n ------------  Showing all " + transactionTypeName + ":  ------------\n");
+
+        // List contains all transactions
+        List<Transaction> transactions = getTransactionsFromFile(transactionFileName);
+
+        // This is the empty list where I will store all deposit transactions
+        List<Transaction> matchingIdTransactions = new ArrayList<>();
+
+        // for each loop where it will enter into csv file and sort out 'D' transactions into a new list
+        for (Transaction transaction : transactions) {
+            if (transaction.getIdOfTransaction().equals(id)) {
+                matchingIdTransactions.add(transaction);
             }
         }
+        return matchingIdTransactions;
+
     }
 
-    private static void displayLedger(String filter) {
-        List<Transaction> filtered = new ArrayList<>();
-        for (Transaction t : transactions) {
-            if (filter.equals("all") || t.getType().equals(filter)) {
-                filtered.add(t);
+    public static void reportMenu() {
+
+        boolean runningReportMenu = true;
+
+        while (runningReportMenu) {
+            System.out.println("\n                     *****   Showing All Reports: *****      ");
+            System.out.println(""" 
+                     \n ------------  Please select from the following options:  ------------
+                    (1.) Month To Date
+                    (2.) Previous Month
+                    (3.) Year To Date
+                    (4.) Previous Year
+                    (5.) Search by Vendor
+                    (0.) Back to Reports
+                    """);
+
+            int userChoice = Integer.parseInt(scanner.nextLine());
+            //create switch statement
+            switch (userChoice) {
+                case 1:
+                    monthToDate(transactionFileName);
+                    break;
+                case 2:
+                    previousMonth(transactionFileName);
+                    break;
+                case 3:
+                    yearToDate(transactionFileName);
+                    break;
+                case 4:
+                    previousYear(transactionFileName);
+                    break;
+                case 5:
+                    searchByVendor(transactionFileName);
+                    break;
+                case 0:
+                    runningReportMenu = false;
+                    break;
             }
         }
-        filtered.sort(Comparator.comparing(Transaction::getDate).reversed());
 
-        for (Transaction t : filtered) {
-            System.out.println(t);
-        }
     }
 
-    private static void reportsScreen(Scanner scanner) {
-        while (true) {
-            System.out.println("\nReports Screen:");
-            System.out.println("1) Month To Date");
-            System.out.println("2) Previous Month");
-            System.out.println("3) Year To Date");
-            System.out.println("4) Previous Year");
-            System.out.println("5) Search by Vendor");
-            System.out.println("0) Back");
-            System.out.print("Enter choice: ");
-            String choice = scanner.nextLine();
+    public static void searchByVendor(String fileName) {
+        // all trans list
+        List<Transaction> transactions = getTransactionsFromFile(fileName);
+        // new list containing only the matching vendor info of transactions
+        List<Transaction> matchingVendors = new ArrayList<>();
+        System.out.println("Please enter the vendors name: ");
 
-            switch (choice) {
-                case "1":
-                    // Add Month-to-Date logic
-                    break;
-                case "2":
-                    // Add Previous Month logic
-                    break;
-                case "3":
-                    // Add Year-to-Date logic
-                    break;
-                case "4":
-                    // Add Previous Year logic
-                    break;
-                case "5":
-                    searchByVendor(scanner);
-                    break;
-                case "0":
-                    return;
-                default:
-                    System.out.println("Invalid choice. Please try again.");
+        String userVendorsName = scanner.nextLine();
+
+        for (Transaction transaction : transactions) {
+            if (transaction.getVendor().equalsIgnoreCase(userVendorsName)) {
+
+                matchingVendors.add(transaction);
             }
         }
+        sortingDateTime(matchingVendors);
     }
 
-    private static void searchByVendor(Scanner scanner) {
-        System.out.print("Enter vendor name: ");
-        String vendor = scanner.nextLine();
+    public static void yearToDate(String fileName) {
 
-        for (Transaction t : transactions) {
-            if (t.getVendor().equalsIgnoreCase(vendor)) {
-                System.out.println(t);
+        // List
+        List<Transaction> transactions = getTransactionsFromFile(fileName);
+        // Will create a new list year to date.
+        List<Transaction> yearToDate = new ArrayList<>();
+
+        // LDT to get todays date
+        LocalDateTime todayDate = LocalDateTime.now();
+        // Beginning of the year
+        LocalDateTime firstDayOfYear = todayDate.withDayOfYear(1).withHour(0).withMinute(0).withSecond(0);
+
+        for (Transaction transaction : transactions) {
+            // 'dtc' was created in transaction class, in trans builder by combing date & time
+            LocalDateTime dateTimeCombined = transaction.getDateTime();
+
+            if ((dateTimeCombined.isEqual(firstDayOfYear) || dateTimeCombined.isAfter(firstDayOfYear)) && ((dateTimeCombined.isEqual(todayDate) || dateTimeCombined.isBefore(todayDate)))) {
+
+                yearToDate.add(transaction);
             }
         }
+        sortingDateTime(yearToDate);
     }
 
-    private static void exitApplication() {
-        System.out.println("Exiting the application...");
+    public static void monthToDate(String fileName) {
+        // Old list
+        List<Transaction> transactions = getTransactionsFromFile(fileName);
+        // new list
+        List<Transaction> monthToDate = new ArrayList<>();
+
+        LocalDateTime todayDate = LocalDateTime.now();
+
+        LocalDateTime firstDayOfTheMonth = todayDate.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+
+        //                 one at a time       list
+        for (Transaction transaction : transactions) {
+            // Call out variable transaction and loop through every transaction
+            LocalDateTime transactionDate = transaction.getDateTime();
+
+            if ((transactionDate.isEqual(firstDayOfTheMonth) || transactionDate.isAfter(firstDayOfTheMonth)) &&
+                    ((transactionDate.isEqual(todayDate)) || transactionDate.isBefore(todayDate))) {
+                monthToDate.add(transaction);
+            }
+        }
+        sortingDateTime(monthToDate);
     }
+
+    public static void previousMonth(String fileName) {
+        List<Transaction> transactions = getTransactionsFromFile(fileName);
+        List<Transaction> previousMonth = new ArrayList<>();
+
+        LocalDateTime currentDate = LocalDateTime.now();
+        LocalDateTime firstDayOfMonth = currentDate.withDayOfMonth(1).minusMonths(1);
+        LocalDateTime lastDayOfTheMonth = firstDayOfMonth.withDayOfMonth(firstDayOfMonth.getMonth().length(LocalDate.of(firstDayOfMonth.getYear(), 1, 1).isLeapYear()));
+
+        for (Transaction transaction : transactions) {
+            LocalDateTime prevMonthDateTime = transaction.getDateTime();
+
+            if ((prevMonthDateTime.isEqual(firstDayOfMonth) || prevMonthDateTime.isAfter(firstDayOfMonth)) && ((prevMonthDateTime.isEqual(lastDayOfTheMonth)) || prevMonthDateTime.isBefore(lastDayOfTheMonth))) {
+
+                previousMonth.add(transaction);
+            }
+        }
+        sortingDateTime(previousMonth);
+    }
+
+    public static void previousYear(String fileName) {
+
+        List<Transaction> transactions = getTransactionsFromFile(fileName);
+        List<Transaction> previousYear = new ArrayList<>();
+
+        LocalDateTime currentDate = LocalDateTime.now();
+        LocalDateTime firstDayOfYear = currentDate.minusYears(1).withDayOfYear(1).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime lastDayOfYear = LocalDateTime.of(firstDayOfYear.getYear(), 12, 31, 23, 59, 59);
+
+        for (Transaction transaction : transactions) {
+
+            LocalDateTime dateTimeCombined = transaction.getDateTime();
+
+            if ((dateTimeCombined.isEqual(firstDayOfYear) || dateTimeCombined.isAfter(firstDayOfYear)) && ((dateTimeCombined.isEqual(lastDayOfYear)) || dateTimeCombined.isBefore(lastDayOfYear))) {
+
+                previousYear.add(transaction);
+            }
+        }
+        sortingDateTime(previousYear);
+    }
+
+    public static void sortingDateTime (List<Transaction> unsortedDateTimeList){
+
+        unsortedDateTimeList.sort(Comparator.comparing(Transaction::getDateTime).reversed());
+        displayTransaction(unsortedDateTimeList);
+    }
+
+
 }
